@@ -1,0 +1,14 @@
+*.egg-info
+src/python/build
+src/python/dist
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pyzw
+
+.vscode-ctags
+.pytest_cache
+.vscode/
