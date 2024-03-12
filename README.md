@@ -22,7 +22,8 @@ The latest release can be found on the [GitHub releases page](https://github.com
   - [Communication Sequence](#communication-sequence)
     - [Communication Sequence Diagram](#communication-sequence-diagram)
     - [Example Communication Sequences](#example-communication-sequences)
-- [Getting Started (TODO)](#getting-started-todo)
+- [Getting Started (in progress)](#getting-started-in-progress)
+  - [Installation of python package](#installation-of-python-package)
 - [Examples (TODO)](#examples-todo)
 - [License](#license)
 - [Contributing](#contributing)
@@ -116,7 +117,33 @@ The communication flow is as follows:
   - **Rover** -> **HM**: `Acknowledge` Message
 
 
-# Getting Started (TODO)
+# Getting Started (in progress)
+
+## Installation of python package
+```bash
+cd src/python
+
+# make sure you have pip installed
+python3 -m pip install --upgrade pip
+
+# install required packages for building
+python3 -m pip install --upgrade build pytest
+
+# install the package in editable mode
+pip install -e .
+
+# or, build the package
+python3 -m build
+
+# or, test locally
+python3 -m pytest
+
+# or, test locally with cli logs
+python3 -m pytest --log-cli-level info # or debug, warning, error ...
+
+# or run linting
+python3 -m pylint rscp
+```
 
 # Examples (TODO)
 
