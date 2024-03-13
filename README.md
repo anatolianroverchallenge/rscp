@@ -120,6 +120,9 @@ The communication flow is as follows:
 # Getting Started (in progress)
 
 ## Installation of python package
+
+Build status: ![python-package](https://github.com/anatolianroverchallenge/rscp/actions/workflows/build_python.yml/badge.svg)
+
 ```bash
 cd src/python
 
