@@ -47,4 +47,7 @@ jobs:
           context: .
           file: docker/Dockerfile-python
           push: ${{ env.PUSH_IMAGE }}
-          tags: ghcr.io/${{ github.repository_owner }}/rscp-python:${{ env.IMAGE_TAG }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/rscp-python:${{ env.IMAGE_TAG }}
+            ghcr.io/${{ github.repository_owner }}/rscp-python:latest
+
