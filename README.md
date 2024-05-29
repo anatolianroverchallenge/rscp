@@ -23,7 +23,11 @@ The latest release can be found on the [GitHub releases page](https://github.com
     - [Message Types](#message-types)
   - [Communication Sequence](#communication-sequence)
     - [Communication Sequence Diagram](#communication-sequence-diagram)
-    - [Example Communication Sequences](#example-communication-sequences)
+    - [Mission Communication Sequences](#mission-communication-sequences)
+      - [Stage 1](#stage-1)
+      - [Stage 2](#stage-2)
+      - [Stage 3](#stage-3)
+  - [Example Mission Parameters](#example-mission-parameters)
 - [Getting Started (in progress)](#getting-started-in-progress)
   - [Installation of python package](#installation-of-python-package)
 - [Examples (TODO)](#examples-todo)
@@ -49,13 +53,19 @@ The latest release can be found on the [GitHub releases page](https://github.com
 - **Checksum**: The checksum field is used to verify the integrity of the frame. It is calculated using the CRC-16-CCITT algorithm. The checksum is calculated over the frame starting from (incuding) start byte to last element of (including) data byte. The checksum bytes are not included in the calculation of the checksum. The checksum is stored in the checksum field in big endian byte order.
 
 ### Message Types
-| Message Type  | Message ID | Body Size | Body Fields                      |
-| ------------- | ---------- | --------- | -------------------------------- |
-| Acknowledge   | 0x00       | 0         | None                             |
-| ArmDisarm     | 0x01       | 1         | arm(bool)                        |
-| NavigateToGPS | 0x02       | 8         | latitude(float),longitude(float) |
-| TaskCompleted | 0x03       | 0         | None                             |
-| SetStage      | 0x04       | 1         | stage(uint8_t)                   |
+| Message Type       | Message ID | Body Size | Body Fields                                             |
+| ------------------ | ---------- | --------- | ------------------------------------------------------- |
+| Acknowledge        | 0x00       | 0         | None                                                    |
+| ArmDisarm          | 0x01       | 1         | arm(bool)                                               |
+| NavigateToGPS      | 0x02       | 8         | latitude(float),longitude(float)                        |
+| TaskCompleted      | 0x03       | 0         | None                                                    |
+| SetStage           | 0x04       | 1         | stage(uint8_t)                                          |
+| Text               | 0x05       | N         | text(char[N])                                           |
+| LocateTag          | 0x06       | 1         | tag_id(uint8_t)                                         |
+| LocateMultipleTags | 0x07       | N         | tag_ids(uint8_t[N])                                     |
+| Location3D         | 0x08       | 12 + N    | x(float),y(float),z(float),reference<optional>(char[N]) |
+| Detection          | 0x09       | 1 + N     | tag_id(uint8_t),location<optional>(Location3D)          |
+| SetParameters      | 0x0A       | N         | parameter_dict_in_yaml(char[N])                         |
 
 ## Communication Sequence
 There are two main components in the communication flow:
@@ -103,21 +113,112 @@ The communication flow is as follows:
   <em>Communication Flow incl. the Client Module Relay</em>
 </p>
 
-### Example Communication Sequences
 
-**Arming/Disarming Sequence:**
-  - **HM** -> **Rover**: `ArmDisarm` Message
-  - **Rover** -> **HM**: `Acknowledge` Message
+### Mission Communication Sequences
 
-**Navigation Sequence:**
-  - **HM** -> **Rover**: `NavigateToGPS` Message
-  - **Rover** -> **HM**: `Acknowledge` Message
-  - **Rover** -> **HM**: `TaskCompleted` Message
+#### Stage 1
+| Timing Mark | Message Type             | Direction       | Description                              | light          |
+| ----------- | ------------------------ | --------------- | ---------------------------------------- | -------------- |
+| --          | SetParameters(params)    | HM -> CM        | --                                       | :heart:        |
+| --          | SetParameters(params)    | **CM -> Rover** | Rover receives the mission parameters    | :heart:        |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the parameters        | :heart:        |
+| --          | Acknowledge              | CM -> HM        | --                                       | :heart:        |
+| --          | SetStage(1)              | HM -> CM        | --                                       | :heart:        |
+| --          | SetStage(1)              | **CM -> Rover** | Rover sets the stage to 1                | :heart:        |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the stage setting     | :heart:        |
+| --          | Acknowledge              | CM -> HM        | --                                       | :heart:        |
+| --          | ArmDisarm(arm=True)      | HM -> CM        | --                                       | :heart:        |
+| --          | ArmDisarm(arm=True)      | **CM -> Rover** | Rover arms itself                        | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the arming request    | :green_heart:  |
+| --          | Acknowledge              | CM -> HM        | --                                       | :green_heart:  |
+| --          | NavigateToGPS(lat1,lon1) | HM -> CM        | --                                       | :green_heart:  |
+| --          | NavigateToGPS(lat1,lon1) | **CM -> Rover** | Rover starts receives GPS coordinates    | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation | :yellow_heart: |
+| t0          | Acknowledge              | CM -> HM        | --                                       | :yellow_heart: |
+| --          | no message sent          | --              | finished navigating                      | :yellow_heart: |
+| --          | no message sent          | --              | drop repeater                            | :yellow_heart: |
+| --          | TaskCompleted            | **Rover -> CM** | rover reports navigation finished        | :green_heart:  |
+| t1          | TaskCompleted            | CM -> HM        | Navigation duration = t1(now) - t0       | :green_heart:  |
 
-**Stage Setting Sequence:**
-  - **HM** -> **Rover**: `SetStage` Message
-  - **Rover** -> **HM**: `Acknowledge` Message
+#### Stage 2
+| Timing Mark | Message Type             | Direction       | Description                                    | light          |
+| ----------- | ------------------------ | --------------- | ---------------------------------------------- | -------------- |
+| --          | SetStage(2)              | HM -> CM        | --                                             | :green_heart:  |
+| --          | SetStage(2)              | **CM -> Rover** | Rover sets the stage to 2                      | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the stage setting           | :green_heart:  |
+| --          | Acknowledge              | CM -> HM        | --                                             | :green_heart:  |
+| --          | NavigateToGPS(lat2,lon2) | HM -> CM        | --                                             | :green_heart:  |
+| --          | NavigateToGPS(lat2,lon2) | **CM -> Rover** | Rover starts receives GPS coordinates          | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation       | :green_heart:  |
+| t2          | Acknowledge              | CM -> HM        | --                                             | :yellow_heart: |
+| --          | no message sent          | --              | finished navigating                            | :yellow_heart: |
+| --          | TaskCompleted            | **Rover -> CM** | rover reports navigation finished              | :green_heart:  |
+| t3          | TaskCompleted            | CM -> HM        | Navigation duration = t3(now) - t2             | :green_heart:  |
+| --          | LocateMultipleTags(i, j) | HM -> CM        | --                                             | :green_heart:  |
+| --          | LocateMultipleTags(i, j) | **CM -> Rover** | Rover receives search & locate request         | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts locating         | :yellow_heart: |
+| t4          | Acknowledge              | CM -> HM        | --                                             | :yellow_heart: |
+| --          | no message sent          | --              | Rover locates tag i (lava tube enterance)      | :yellow_heart: |
+| --          | no message sent          | --              | continue exploring                             | :yellow_heart: |
+| --          | Detection(3.1415, "red") | **Rover -> CM** | Rover detects colored cardboard                | :yellow_heart: |
+| --          | Detection(3.1415, "red") | CM -> HM        | points earned if repeater positioned           | :yellow_heart: |
+| --          | no message sent          | --              | continue exploring                             | :yellow_heart: |
+| --          | no message sent          | --              | Rover locates tag j (lava tube exit) and exits | :yellow_heart: |
+| --          | Detection(3.1415, "red") | **Rover -> CM** | Rover reports detected colored cardboard       | :yellow_heart: |
+| --          | Detection(3.1415, "red") | CM -> HM        | points earned if rover exits the tunnel        | :yellow_heart: |
+| --          | TaskCompleted            | **Rover -> CM** | rover reports mission completed                | :green_heart:  |
+| t5          | TaskCompleted            | CM -> HM        | task duration = t5(now) - t4                   | :green_heart:  |
 
+#### Stage 3
+| Timing Mark | Message Type             | Direction       | Description                                    | light          |
+| ----------- | ------------------------ | --------------- | ---------------------------------------------- | -------------- |
+| --          | SetStage(3)              | HM -> CM        | --                                             | :green_heart:  |
+| --          | SetStage(3)              | **CM -> Rover** | Rover sets the stage to 3                      | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the stage setting           | :green_heart:  |
+| --          | Acknowledge              | CM -> HM        | --                                             | :green_heart:  |
+| --          | NavigateToGPS(lat3,lon3) | HM -> CM        | --                                             | :green_heart:  |
+| --          | NavigateToGPS(lat3,lon3) | **CM -> Rover** | Rover starts receives GPS coordinates          | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation       | :yellow_heart: |
+| t6          | Acknowledge              | CM -> HM        | --                                             | :yellow_heart: |
+| --          | no message sent          | --              | finished navigating                            | :yellow_heart: |
+| --          | TaskCompleted            | **Rover -> CM** | rover reports navigation finished              | :green_heart:  |
+| t7          | TaskCompleted            | CM -> HM        | Navigation duration = t7(now) - t6             | :green_heart:  |
+| --          | LocateTag(k)             | HM -> CM        | --                                             | :green_heart:  |
+| --          | LocateTag(k)             | **CM -> Rover** | Rover receives search & locate request         | :green_heart:  |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts locating         | :yellow_heart: |
+| t8          | Acknowledge              | CM -> HM        | --                                             | :yellow_heart: |
+| --          | no message sent          | --              | Rover locates tag k (airlock enterance)        | :yellow_heart: |
+| --          | no message sent          | --              | Rover docks to the airlock                     | :yellow_heart: |
+| --          | TaskCompleted            | **Rover -> CM** | rover reports mission completed                | :green_heart:  |
+| t9          | TaskCompleted            | CM -> HM        | task duration = t9(now) - t8                   | :green_heart:  |
+| --          | ArmDisarm(arm=False)     | HM -> CM        | --                                             | :green_heart:  |
+| --          | ArmDisarm(arm=False)     | **CM -> Rover** | Rover disarms itself, light turns green to red | :heart:        |
+| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the arming request          | :heart:        |
+| --          | Acknowledge              | CM -> HM        | mission completed.                             | :heart:        |
+
+## Example Mission Parameters
+```yaml
+terrain_altitude: 0.0
+airlock_coordinates:
+  lat: 0.0
+  lon: 0.0
+tag_mapping:
+  - airlock_enterance
+  - lava_tube_enterance
+  - lava_tube_exit
+# todo: colored cardboard
+```
+
+- `note: the tag id's of i,j,k can be found in the tag_mapping list. if id of "0" received, then tag_mapping[0] is the tag id, which is "airlock_enterance" in this example.`
+- `note: the mission parameters are sent to the rover in the SetParameters message, at the stage 1.`
+- `note: the mission parameters are stored in the rover and used during the mission execution`
+- `note: the lat, lon values are floating point numbers in WGS84 format, along with all GPS coordinates in the protocol.`
+- `note: the "airlock_coordinates" in the mission parameters are the precise coordinates of the rover inside the airlock`
+- `note: p1=(lat1,lon1) will be the repeater drop area's gps coordinates`
+- `note: p2=(lat2,lon2) will be the lava tube enterance's gps coordinates`
+- `note: p3=(lat3,lon3) will be the airlock enterance`
+
+TODO: add map here indicating the points
 
 # Getting Started (in progress)
 
