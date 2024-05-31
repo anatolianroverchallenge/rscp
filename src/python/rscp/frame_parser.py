@@ -17,7 +17,7 @@ class Frame:
             "checksum"
             / construct.Checksum(
                 construct.Int16ub,
-                lambda data: crc.Calculator(crc.Crc16.CCITT.value).checksum(data),
+                lambda data: crc.Calculator(crc.Crc16.XMODEM.value).checksum(data),
                 lambda this: this.start_byte
                 + bytes([this.msg_id, this.length])
                 + this.data,
