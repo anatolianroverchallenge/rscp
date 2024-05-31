@@ -3,6 +3,8 @@ Rover Satellite Communications Protocol is a protocol for communicating with a r
 
 <h2>If you are a competitor in <strong>ARC'24</strong>, please watch this repository to get notified about the updates.</h2>
 
+**Also check out [Discussions](https://github.com/anatolianroverchallenge/rscp/discussions) for updates and questions.**
+
 # Issue Tracking
 Please use the [GitHub issue tracker](https://github.com/anatolianroverchallenge/rscp/issues) to report issues or request features.
 https://github.com/anatolianroverchallenge/rscp/releases
