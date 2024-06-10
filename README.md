@@ -23,7 +23,7 @@ The latest release can be found on the [GitHub releases page](https://github.com
   - [Example Mission Parameters](#example-mission-parameters)
 - [Getting Started](#getting-started)
   - [Installation of python package](#installation-of-python-package)
-- [Examples](#examples)
+  - [Examples](#examples)
 - [License](#license)
 - [Authors](#authors)
 - [Acknowledgements](#acknowledgements)
@@ -88,7 +88,7 @@ python3 -m pytest --log-cli-level info # or debug, warning, error ...
 python3 -m pylint rscp
 ```
 
-# Examples
+## Examples
 **This section will receive updates soon.**
 
 # License
