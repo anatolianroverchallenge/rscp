@@ -140,6 +140,12 @@ The communication flow is as follows:
 | --          | TaskCompleted            | **Rover -> CM** | rover reports navigation finished        | :green_heart:  |
 | t1          | TaskCompleted            | CM -> HM        | Navigation duration = t1(now) - t0       | :green_heart:  |
 
+Here is the visual representation of the stage 1 sequence:
+
+<p align="center">
+  <img src="docs/images/diagram_tool_delivery.png" alt="Stage 1 Sequence" width="500"/>
+</p>
+
 #### Stage 2
 | Timing Mark | Message Type             | Direction       | Description                                    | light          |
 | ----------- | ------------------------ | --------------- | ---------------------------------------------- | -------------- |
@@ -171,6 +177,10 @@ The communication flow is as follows:
 
 *LocateArucoTags(...) = LocateArucoTags([ArucoTag(i, 16), ArucoTag(j, 16)])*
 
+<p align="center">
+  <img src="docs/images/diagram_lava_tube.png" alt="Stage 2 Sequence" width="500"/>
+</p>
+
 #### Stage 3
 | Timing Mark | Message Type                       | Direction       | Description                                    | light          |
 | ----------- | ---------------------------------- | --------------- | ---------------------------------------------- | -------------- |
@@ -197,6 +207,10 @@ The communication flow is as follows:
 | --          | ArmDisarm(arm=False)               | **CM -> Rover** | Rover disarms itself, light turns green to red | :heart:        |
 | --          | Acknowledge                        | **Rover -> CM** | Rover acknowledges the arming request          | :heart:        |
 | --          | Acknowledge                        | CM -> HM        | mission completed.                             | :heart:        |
+
+<p align="center">
+  <img src="docs/images/diagram_return_to_home.png" alt="Stage 3 Sequence" width="500"/>
+</p>
 
 ## Example Mission Parameters
 ```yaml
