@@ -47,8 +47,10 @@ class TestBroker(unittest.TestCase):
             message_types.TaskFinished(),
             message_types.SetStage(2),
             message_types.Text("Test::String"),
-            message_types.LocateTag(5),
-            message_types.LocateMultipleTags([3, 4]),
+            message_types.ArucoTag(5, 100),
+            message_types.LocateArucoTags(
+                [message_types.ArucoTag(5, 100), message_types.ArucoTag(1, 200)]
+            ),
             message_types.Location3D(
                 1.100000023841858,
                 2.0999999046325684,
@@ -56,13 +58,8 @@ class TestBroker(unittest.TestCase):
                 "reference::origin",
             ),
             message_types.Detection(
-                10,
-                message_types.Location3D(
-                    1.100000023841858,
-                    2.0999999046325684,
-                    3.0999999046325684,
-                    "reference::world",
-                ),
+                3.1415,
+                "red",
             ),
         ]
         n_messages = len(tx_queue)

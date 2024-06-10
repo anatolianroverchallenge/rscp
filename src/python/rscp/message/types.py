@@ -4,6 +4,8 @@ from typing import List, Optional
 from .base import MessageBase
 import yaml
 
+FLOATING_POINT_TOLERANCE = 1e-6
+
 
 class Acknowledge(MessageBase, msg_id=0x0):
     def serialize(self) -> bytes:
@@ -43,6 +45,14 @@ class NavigateToGPS(MessageBase, msg_id=0x2):
         latitude, longitude = struct.unpack(">ff", data)
         return NavigateToGPS(latitude, longitude)
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, NavigateToGPS):
+            return False
+        return (
+            abs(self.latitude - other.latitude) < FLOATING_POINT_TOLERANCE
+            and abs(self.longitude - other.longitude) < FLOATING_POINT_TOLERANCE
+        )
+
 
 class TaskFinished(MessageBase, msg_id=0x3):
     def serialize(self) -> bytes:
@@ -81,31 +91,36 @@ class Text(MessageBase, msg_id=0x5):
         return Text(text)
 
 
-class LocateTag(MessageBase, msg_id=0x6):
-    def __init__(self, tag_id: int):
+class ArucoTag(MessageBase, msg_id=0x6):
+    def __init__(self, tag_id: int, dictionary: int):
         self.tag_id = tag_id
+        self.dictionary = dictionary
 
     def serialize(self) -> bytes:
-        return struct.pack(">B", self.tag_id)
+        return struct.pack(">IB", self.tag_id, self.dictionary)
 
     @staticmethod
-    def deserialize(data: bytes) -> LocateTag:
-        assert len(data) == 1
-        tag_id = struct.unpack(">B", data)[0]
-        return LocateTag(tag_id)
+    def deserialize(data: bytes) -> ArucoTag:
+        assert len(data) == 5
+        tag_id, dictionary = struct.unpack(">IB", data)
+        return ArucoTag(tag_id, dictionary)
 
 
-class LocateMultipleTags(MessageBase, msg_id=0x7):
-    def __init__(self, tag_ids: List[int]):
-        self.tag_ids = tag_ids
+class LocateArucoTags(MessageBase, msg_id=0x7):
+    def __init__(self, tag_list: List[ArucoTag]):
+        self.tag_list = tag_list
 
     def serialize(self) -> bytes:
-        return struct.pack(f">{len(self.tag_ids)}B", *self.tag_ids)
+        return b"".join(tag.serialize() for tag in self.tag_list)
 
     @staticmethod
-    def deserialize(data: bytes) -> LocateMultipleTags:
-        tag_ids = struct.unpack(f">{len(data)}B", data)
-        return LocateMultipleTags(list(tag_ids))
+    def deserialize(data: bytes) -> LocateArucoTags:
+        assert len(data) % 5 == 0
+        tag_list = [
+            ArucoTag.deserialize(data[i : i + 5]) for i in range(0, len(data), 5)
+        ]
+
+        return LocateArucoTags(tag_list)
 
 
 class Location3D(MessageBase, msg_id=0x8):
@@ -132,30 +147,41 @@ class Location3D(MessageBase, msg_id=0x8):
         reference_str = data[12:].decode()
         return Location3D(x, y, z, reference=reference_str)
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Location3D):
+            return False
+        return (
+            abs(self.x - other.x) < FLOATING_POINT_TOLERANCE
+            and abs(self.y - other.y) < FLOATING_POINT_TOLERANCE
+            and abs(self.z - other.z) < FLOATING_POINT_TOLERANCE
+            and self.reference == other.reference
+        )
+
 
 class Detection(MessageBase, msg_id=0x9):
-    def __init__(self, tag_id: int, location: Optional[Location3D] = None):
-        self.tag_id = tag_id
-        self.location = location
+    def __init__(self, distance: float, description: str):
+        self.distance = distance
+        self.description = description
 
     def serialize(self) -> bytes:
-        return struct.pack(">B", self.tag_id) + (
-            self.location.serialize() if self.location is not None else b""
-        )
+        return struct.pack(">f", self.distance) + self.description.encode()
 
     @staticmethod
     def deserialize(data: bytes) -> Detection:
-        assert len(data) >= 1
-        tag_id = struct.unpack(">B", data[:1])[0]
+        assert len(data) >= 4
 
-        if len(data) == 1:
-            return Detection(tag_id, None)
+        distance = struct.unpack(">f", data[:4])[0]
+        description = data[4:].decode()
+        print(Detection(distance, description))
+        return Detection(distance, description)
 
-        assert len(data) >= 13
-
-        location = Location3D.deserialize(data[1:])
-        return Detection(tag_id, location)
-
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Detection):
+            return False
+        return (
+            abs(self.distance - other.distance) < FLOATING_POINT_TOLERANCE
+            and self.description == other.description
+        )
 
 class SetParameters(MessageBase, msg_id=0xA):
     def __init__(self, parameters: dict):
@@ -169,3 +195,4 @@ class SetParameters(MessageBase, msg_id=0xA):
     def deserialize(data: bytes) -> SetParameters:
         parameters = yaml.safe_load(data)
         return SetParameters(parameters)
+        

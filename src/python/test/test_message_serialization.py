@@ -7,8 +7,8 @@ from rscp.message.types import (
     NavigateToGPS,
     Text,
     SetStage,
-    LocateTag,
-    LocateMultipleTags,
+    ArucoTag,
+    LocateArucoTags,
     Location3D,
     Detection,
     SetParameters,
@@ -50,10 +50,14 @@ class TestMessageSerialization(unittest.TestCase):
         self._test_message_serialization(SetStage, b"\x01", 1)
 
     def test_locate_tag(self):
-        self._test_message_serialization(LocateTag, b"\x01", 1)
+        self._test_message_serialization(ArucoTag, b"\x00\x00\x00\x01\x01", 1, 1)
 
     def test_locate_multiple_tags(self):
-        self._test_message_serialization(LocateMultipleTags, b"\x01\x02\x03", [1, 2, 3])
+        tag1 = ArucoTag(1, 1)
+        tag2 = ArucoTag(2, 2)
+        self._test_message_serialization(
+            LocateArucoTags, b"\x00\x00\x00\x01\x01\x00\x00\x00\x02\x02", [tag1, tag2]
+        )
 
     def test_location_3d(self):
         self._test_message_serialization(
@@ -64,11 +68,12 @@ class TestMessageSerialization(unittest.TestCase):
         )
 
     def test_detection(self):
-        l = Location3D(3, 5, 9, reference="world")
         self._test_message_serialization(
-            Detection, b"\x05@@\x00\x00@\xa0\x00\x00A\x10\x00\x00world", 5, l
+            Detection,
+            b"@I\x0eVgreen",
+            3.1415,
+            "green",
         )
-        self._test_message_serialization(Detection, b"\x05", 5, None)
 
     def test_set_parameters(self):
         params = {
