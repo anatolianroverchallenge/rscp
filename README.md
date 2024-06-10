@@ -53,19 +53,19 @@ The latest release can be found on the [GitHub releases page](https://github.com
 - **Checksum**: The checksum field is used to verify the integrity of the frame. It is calculated using the CRC-16-CCITT algorithm. The checksum is calculated over the frame starting from (incuding) start byte to last element of (including) data byte. The checksum bytes are not included in the calculation of the checksum. The checksum is stored in the checksum field in big endian byte order.
 
 ### Message Types
-| Message Type       | Message ID | Body Size | Body Fields                                             |
-| ------------------ | ---------- | --------- | ------------------------------------------------------- |
-| Acknowledge        | 0x00       | 0         | None                                                    |
-| ArmDisarm          | 0x01       | 1         | arm(bool)                                               |
-| NavigateToGPS      | 0x02       | 8         | latitude(float),longitude(float)                        |
-| TaskCompleted      | 0x03       | 0         | None                                                    |
-| SetStage           | 0x04       | 1         | stage(uint8_t)                                          |
-| Text               | 0x05       | N         | text(char[N])                                           |
-| LocateTag          | 0x06       | 1         | tag_id(uint8_t)                                         |
-| LocateMultipleTags | 0x07       | N         | tag_ids(uint8_t[N])                                     |
-| Location3D         | 0x08       | 12 + N    | x(float),y(float),z(float),reference<optional>(char[N]) |
-| Detection          | 0x09       | 1 + N     | tag_id(uint8_t),location<optional>(Location3D)          |
-| SetParameters      | 0x0A       | N         | parameter_dict_in_yaml(char[N])                         |
+| Message Type    | Message ID | Body Size | Body Fields                                             |
+| --------------- | ---------- | --------- | ------------------------------------------------------- |
+| Acknowledge     | 0x00       | 0         | None                                                    |
+| ArmDisarm       | 0x01       | 1         | arm(bool)                                               |
+| NavigateToGPS   | 0x02       | 8         | latitude(float),longitude(float)                        |
+| TaskCompleted   | 0x03       | 0         | None                                                    |
+| SetStage        | 0x04       | 1         | stage(uint8_t)                                          |
+| Text            | 0x05       | N         | text(char[N])                                           |
+| ArucoTag        | 0x06       | 5         | tag_id(uint32_t),dictionary(uint8_t)                    |
+| LocateArucoTags | 0x07       | N         | tag_list(ArucoTag[N / 5])                               |
+| Location3D      | 0x08       | 12 + N    | x(float),y(float),z(float),reference<optional>(char[N]) |
+| Detection       | 0x09       | 4 + N     | distance(float),color(char[N])                          |
+| SetParameters   | 0x0A       | N         | parameter_dict_in_yaml(char[N])                         |
 
 ## Communication Sequence
 There are two main components in the communication flow:
@@ -154,47 +154,50 @@ The communication flow is as follows:
 | --          | no message sent          | --              | finished navigating                            | :yellow_heart: |
 | --          | TaskCompleted            | **Rover -> CM** | rover reports navigation finished              | :green_heart:  |
 | t3          | TaskCompleted            | CM -> HM        | Navigation duration = t3(now) - t2             | :green_heart:  |
-| --          | LocateMultipleTags(i, j) | HM -> CM        | --                                             | :green_heart:  |
-| --          | LocateMultipleTags(i, j) | **CM -> Rover** | Rover receives search & locate request         | :green_heart:  |
+| --          | LocateArucoTags(...)     | HM -> CM        | --                                             | :green_heart:  |
+| --          | LocateArucoTags(...)     | **CM -> Rover** | Rover receives search & locate request         | :green_heart:  |
 | --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts locating         | :yellow_heart: |
 | t4          | Acknowledge              | CM -> HM        | --                                             | :yellow_heart: |
 | --          | no message sent          | --              | Rover locates tag i (lava tube enterance)      | :yellow_heart: |
 | --          | no message sent          | --              | continue exploring                             | :yellow_heart: |
-| --          | Detection(3.1415, "red") | **Rover -> CM** | Rover detects colored cardboard                | :yellow_heart: |
-| --          | Detection(3.1415, "red") | CM -> HM        | points earned if repeater positioned           | :yellow_heart: |
+| --          | Detection(3.10, "red")   | **Rover -> CM** | Rover detects colored cardboard                | :yellow_heart: |
+| --          | Detection(3.10, "red")   | CM -> HM        | points earned if repeater positioned           | :yellow_heart: |
 | --          | no message sent          | --              | continue exploring                             | :yellow_heart: |
 | --          | no message sent          | --              | Rover locates tag j (lava tube exit) and exits | :yellow_heart: |
-| --          | Detection(3.1415, "red") | **Rover -> CM** | Rover reports detected colored cardboard       | :yellow_heart: |
-| --          | Detection(3.1415, "red") | CM -> HM        | points earned if rover exits the tunnel        | :yellow_heart: |
+| --          | Detection(3.10, "red")   | **Rover -> CM** | Rover reports detected colored cardboard       | :yellow_heart: |
+| --          | Detection(3.10, "red")   | CM -> HM        | points earned if rover exits the tunnel        | :yellow_heart: |
 | --          | TaskCompleted            | **Rover -> CM** | rover reports mission completed                | :green_heart:  |
 | t5          | TaskCompleted            | CM -> HM        | task duration = t5(now) - t4                   | :green_heart:  |
 
+*LocateArucoTags(...) = LocateArucoTags([ArucoTag(i, 16), ArucoTag(j, 16)])*
+*Detection(...) = Detection(ArucoTag(k, 16), Location3D(0, 0, distance, "/lava_tube_enterance"))*
+
 #### Stage 3
-| Timing Mark | Message Type             | Direction       | Description                                    | light          |
-| ----------- | ------------------------ | --------------- | ---------------------------------------------- | -------------- |
-| --          | SetStage(3)              | HM -> CM        | --                                             | :green_heart:  |
-| --          | SetStage(3)              | **CM -> Rover** | Rover sets the stage to 3                      | :green_heart:  |
-| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the stage setting           | :green_heart:  |
-| --          | Acknowledge              | CM -> HM        | --                                             | :green_heart:  |
-| --          | NavigateToGPS(lat3,lon3) | HM -> CM        | --                                             | :green_heart:  |
-| --          | NavigateToGPS(lat3,lon3) | **CM -> Rover** | Rover starts receives GPS coordinates          | :green_heart:  |
-| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation       | :yellow_heart: |
-| t6          | Acknowledge              | CM -> HM        | --                                             | :yellow_heart: |
-| --          | no message sent          | --              | finished navigating                            | :yellow_heart: |
-| --          | TaskCompleted            | **Rover -> CM** | rover reports navigation finished              | :green_heart:  |
-| t7          | TaskCompleted            | CM -> HM        | Navigation duration = t7(now) - t6             | :green_heart:  |
-| --          | LocateTag(k)             | HM -> CM        | --                                             | :green_heart:  |
-| --          | LocateTag(k)             | **CM -> Rover** | Rover receives search & locate request         | :green_heart:  |
-| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges and starts locating         | :yellow_heart: |
-| t8          | Acknowledge              | CM -> HM        | --                                             | :yellow_heart: |
-| --          | no message sent          | --              | Rover locates tag k (airlock enterance)        | :yellow_heart: |
-| --          | no message sent          | --              | Rover docks to the airlock                     | :yellow_heart: |
-| --          | TaskCompleted            | **Rover -> CM** | rover reports mission completed                | :green_heart:  |
-| t9          | TaskCompleted            | CM -> HM        | task duration = t9(now) - t8                   | :green_heart:  |
-| --          | ArmDisarm(arm=False)     | HM -> CM        | --                                             | :green_heart:  |
-| --          | ArmDisarm(arm=False)     | **CM -> Rover** | Rover disarms itself, light turns green to red | :heart:        |
-| --          | Acknowledge              | **Rover -> CM** | Rover acknowledges the arming request          | :heart:        |
-| --          | Acknowledge              | CM -> HM        | mission completed.                             | :heart:        |
+| Timing Mark | Message Type                       | Direction       | Description                                    | light          |
+| ----------- | ---------------------------------- | --------------- | ---------------------------------------------- | -------------- |
+| --          | SetStage(3)                        | HM -> CM        | --                                             | :green_heart:  |
+| --          | SetStage(3)                        | **CM -> Rover** | Rover sets the stage to 3                      | :green_heart:  |
+| --          | Acknowledge                        | **Rover -> CM** | Rover acknowledges the stage setting           | :green_heart:  |
+| --          | Acknowledge                        | CM -> HM        | --                                             | :green_heart:  |
+| --          | NavigateToGPS(lat3,lon3)           | HM -> CM        | --                                             | :green_heart:  |
+| --          | NavigateToGPS(lat3,lon3)           | **CM -> Rover** | Rover starts receives GPS coordinates          | :green_heart:  |
+| --          | Acknowledge                        | **Rover -> CM** | Rover acknowledges and starts navigation       | :yellow_heart: |
+| t6          | Acknowledge                        | CM -> HM        | --                                             | :yellow_heart: |
+| --          | no message sent                    | --              | finished navigating                            | :yellow_heart: |
+| --          | TaskCompleted                      | **Rover -> CM** | rover reports navigation finished              | :green_heart:  |
+| t7          | TaskCompleted                      | CM -> HM        | Navigation duration = t7(now) - t6             | :green_heart:  |
+| --          | LocateArucoTags([ArucoTag(k, 16)]) | HM -> CM        | --                                             | :green_heart:  |
+| --          | LocateArucoTags([ArucoTag(k, 16)]) | **CM -> Rover** | Rover receives search & locate request         | :green_heart:  |
+| --          | Acknowledge                        | **Rover -> CM** | Rover acknowledges and starts locating         | :yellow_heart: |
+| t8          | Acknowledge                        | CM -> HM        | --                                             | :yellow_heart: |
+| --          | no message sent                    | --              | Rover locates tag k (airlock enterance)        | :yellow_heart: |
+| --          | no message sent                    | --              | Rover docks to the airlock                     | :yellow_heart: |
+| --          | TaskCompleted                      | **Rover -> CM** | rover reports mission completed                | :green_heart:  |
+| t9          | TaskCompleted                      | CM -> HM        | task duration = t9(now) - t8                   | :green_heart:  |
+| --          | ArmDisarm(arm=False)               | HM -> CM        | --                                             | :green_heart:  |
+| --          | ArmDisarm(arm=False)               | **CM -> Rover** | Rover disarms itself, light turns green to red | :heart:        |
+| --          | Acknowledge                        | **Rover -> CM** | Rover acknowledges the arming request          | :heart:        |
+| --          | Acknowledge                        | CM -> HM        | mission completed.                             | :heart:        |
 
 ## Example Mission Parameters
 ```yaml
