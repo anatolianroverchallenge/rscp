@@ -170,7 +170,6 @@ The communication flow is as follows:
 | t5          | TaskCompleted            | CM -> HM        | task duration = t5(now) - t4                   | :green_heart:  |
 
 *LocateArucoTags(...) = LocateArucoTags([ArucoTag(i, 16), ArucoTag(j, 16)])*
-*Detection(...) = Detection(ArucoTag(k, 16), Location3D(0, 0, distance, "/lava_tube_enterance"))*
 
 #### Stage 3
 | Timing Mark | Message Type                       | Direction       | Description                                    | light          |
@@ -205,11 +204,6 @@ terrain_altitude: 0.0
 airlock_coordinates:
   lat: 0.0
   lon: 0.0
-tag_mapping:
-  - airlock_enterance
-  - lava_tube_enterance
-  - lava_tube_exit
-# todo: colored cardboard
 ```
 
 - `note: the tag id's of i,j,k can be found in the tag_mapping list. if id of "0" received, then tag_mapping[0] is the tag id, which is "airlock_enterance" in this example.`
