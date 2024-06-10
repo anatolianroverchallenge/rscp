@@ -2,6 +2,7 @@ from __future__ import annotations
 import struct
 from typing import List, Optional
 from .base import MessageBase
+import yaml
 
 
 class Acknowledge(MessageBase, msg_id=0x0):
@@ -154,3 +155,17 @@ class Detection(MessageBase, msg_id=0x9):
 
         location = Location3D.deserialize(data[1:])
         return Detection(tag_id, location)
+
+
+class SetParameters(MessageBase, msg_id=0xA):
+    def __init__(self, parameters: dict):
+        self.parameters = parameters
+
+    def serialize(self) -> bytes:
+        yaml_str = yaml.dump(self.parameters, default_flow_style=False, sort_keys=False)
+        return yaml_str.encode()
+
+    @staticmethod
+    def deserialize(data: bytes) -> SetParameters:
+        parameters = yaml.safe_load(data)
+        return SetParameters(parameters)

@@ -11,6 +11,7 @@ from rscp.message.types import (
     LocateMultipleTags,
     Location3D,
     Detection,
+    SetParameters,
 )
 from typing import List, Type
 
@@ -68,3 +69,18 @@ class TestMessageSerialization(unittest.TestCase):
             Detection, b"\x05@@\x00\x00@\xa0\x00\x00A\x10\x00\x00world", 5, l
         )
         self._test_message_serialization(Detection, b"\x05", 5, None)
+
+    def test_set_parameters(self):
+        params = {
+            "param1": 1,
+            "latitude": 10.0,
+            "longitude": 20.0,
+            "text": "hello",
+            "array": [1, 2],
+        }
+
+        self._test_message_serialization(
+            SetParameters,
+            b"param1: 1\nlatitude: 10.0\nlongitude: 20.0\ntext: hello\narray:\n- 1\n- 2\n",
+            params,
+        )
