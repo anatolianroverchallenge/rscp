@@ -44,14 +44,18 @@ airlock_coordinates:
   lon: 0.0
 ```
 
-- `note: the tag id's of i,j,k can be found in the tag_mapping list. if id of "0" received, then tag_mapping[0] is the tag id, which is "airlock_enterance" in this example.`
-- `note: the mission parameters are sent to the rover in the SetParameters message, at the stage 1.`
-- `note: the mission parameters are stored in the rover and used during the mission execution`
-- `note: the lat, lon values are floating point numbers in WGS84 format, along with all GPS coordinates in the protocol.`
-- `note: the "airlock_coordinates" in the mission parameters are the precise coordinates of the rover inside the airlock`
-- `note: p1=(lat1,lon1) will be the repeater drop area's gps coordinates`
-- `note: p2=(lat2,lon2) will be the lava tube enterance's gps coordinates`
-- `note: p3=(lat3,lon3) will be the airlock enterance`
+Some notes about the mission parameters:
+- An `ArucoTag` is constructed by a `tag_id` and a `dictionary`. The `dictionary` of `cv2.aruco.DICT_ARUCO_ORIGINAL` will used in the competition.
+- The aruco tag at the entrance of the lava tube will have the id of `269` `(i=269)`.
+- The aruco tag at the exit of the lava tube will have the id of `67` `(j=67)`.
+- The aruco tag at the entrance of the airlock will have the id of `297` `(k=297)`.
+- the mission parameters are sent to the rover in the `SetParameters` message, at the stage 1.
+- the mission parameters are stored in the rover and used during the mission execution
+- the `lat, lon` values are floating point numbers in `WGS84` format, along with all GPS coordinates in the protocol.
+- the `airlock_coordinates` in the mission parameters are the precise coordinates of the rover inside the airlock.
+- `p1=(lat1,lon1)` will be the repeater drop area's gps coordinates
+- `p2=(lat2,lon2)` will be the lava tube enterance's gps coordinates
+- `p3=(lat3,lon3)` will be the airlock enterance
 
 <p align="center">
   <img src="docs/images/site_map.png" alt="Site Map" width="500"/>
@@ -89,7 +93,9 @@ python3 -m pylint rscp
 ```
 
 ## Examples
-**This section will receive updates soon.**
+[Here](examples/aruco_detection_example.py) is an example code to detect the Aruco markers which will be placed in the competition area.
+
+**This section will receive more updates soon.**
 
 # License
 This project is licensed under the terms of the [BSD 3-Clause License](LICENSE).
