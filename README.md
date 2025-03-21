@@ -20,7 +20,6 @@ The latest release can be found on the [GitHub releases page](https://github.com
 - [Details](#details)
   - [Frame Format](#frame-format)
   - [Communication Sequence](#communication-sequence)
-  - [Example Mission Parameters](#example-mission-parameters)
 - [Getting Started](#getting-started)
   - [Installation of python package](#installation-of-python-package)
   - [Examples](#examples)
@@ -29,73 +28,62 @@ The latest release can be found on the [GitHub releases page](https://github.com
 - [Acknowledgements](#acknowledgements)
 
 # Details
+RSCP now uses [Google Protocol Buffers](https://developers.google.com/protocol-buffers) for serialization and deserialization of messages. This means you don't have to manually serialize/deserialize RSCP messages. 
+
+You can use the provided `.proto` files under [proto](proto) directory to generate the necessary classes for your language. Refer to the [official documentation](https://protobuf.dev/getting-started/) for more information. You can use the official `protoc` compiler to generate the necessary classes for your language, or you can use the pre-generated classes provided in this repository, which can be found in the [releases](https://github.com/anatolianroverchallenge/rscp/releases). Always use the latest release for the most up-to-date classes.
+
+The releases will have [c.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/c.zip) [cpp.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/cpp.zip) [rscp_protobuf.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/rscp_protobuf.zip) [nanopb.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/nanopb.zip) [index.html](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/index.html) files which contain the necessary classes for the respective languages, generated using the `.proto` files in the [proto](proto) directory using the `protoc` compiler.
+
+| Language      | File                                                                                                            | Description                                         |
+| ------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| C             | [c.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/c.zip)                         | C source files                                      |
+| C++           | [cpp.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/cpp.zip)                     | C++ source files                                    |
+| rscp_protobuf | [rscp_protobuf.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/rscp_protobuf.zip) | Python source files (pip3 install <url> to install) |
+| nanopb        | [nanopb.zip](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/nanopb.zip)               | C source and header files for nanopb library        |
+| docs          | [index.html](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/index.html)               | Documentation for the protocol                      |
+
+You may use `rscp_protobuf.zip` under the [releases](https://github.com/anatolianroverchallenge/rscp/releases) to install the python package using `pip3 install https://github.com/anatolianroverchallenge/rscp/releases/latest/download/rscp_protobuf.zip`
+
+The `nanopb` library is used to generate the C/C++ source and header files that can be used in embedded systems. Refer to the [official documentation](https://jpa.kapsi.fi/nanopb/) and [nanopb examples](https://github.com/nanopb/nanopb/tree/master/examples) for more information.
 
 ## Frame Format
-See [Frame Format](frame_format.md) for the frame format of the protocol.
+
+To communicate with the RSCP module, all you need to do is:
+
+- Create a `rscp.ResponseEnvelope` object
+- Fill out the appropriate fields
+- Serialize the object using the `SerializeToString` method
+- Encode it with `cobs` encoding. For python you can use the `cobs` package.
+- Send the encoded message to the rover over serial
+
+To receive an instruction from the RSCP module, you need to:
+- Receive the message from the serial port and accumulate it over a buffer
+- If `0x00` is received, decode the message using `cobs` decoding
+- Parse the message using the `rscp.RequestEnvelope` object
+- Use `request.WhichOneof('request')` to determine the type of the message
+- Use the appropriate method to handle the data
 
 ## Communication Sequence
-See [Communication Sequence](communication_sequence.md) for the communication sequence between the ground station and the rover.
 
-## Example Mission Parameters
-```yaml
-terrain_altitude: 0.0
-airlock_coordinates:
-  lat: 0.0
-  lon: 0.0
-```
+RSCP client module will be sending host messages to the rovers in `rscp.RequestEnvelope` format. The rovers will be sending responses to the host in `rscp.ResponseEnvelope` format.
 
-Some notes about the mission parameters:
-- An `ArucoTag` is constructed by a `tag_id` and a `dictionary`. The `dictionary` of `cv2.aruco.DICT_ARUCO_ORIGINAL` will used in the competition.
-- The aruco tag at the entrance of the lava tube will have the id of `269` `(i=269)`.
-- The aruco tag at the exit of the lava tube will have the id of `67` `(j=67)`.
-- The aruco tag at the entrance of the airlock will have the id of `297` `(k=297)`.
-- the mission parameters are sent to the rover in the `SetParameters` message, at the stage 1.
-- the mission parameters are stored in the rover and used during the mission execution
-- the `lat, lon` values are floating point numbers in `WGS84` format, along with all GPS coordinates in the protocol.
-- the `airlock_coordinates` in the mission parameters are the precise coordinates of the rover inside the airlock.
-- `p1=(lat1,lon1)` will be the repeater drop area's gps coordinates
-- `p2=(lat2,lon2)` will be the lava tube enterance's gps coordinates
-- `p3=(lat3,lon3)` will be the airlock enterance
-
-<p align="center">
-  <img src="docs/images/site_map.png" alt="Site Map" width="500"/>
-</p>
+** This is a work in progress. More details will be added soon. **
 
 # Getting Started
 
 ## Installation of python package
 
-Build status: ![python-package](https://github.com/anatolianroverchallenge/rscp/actions/workflows/build_python.yml/badge.svg)
-
 ```bash
-cd src/python
+python3 -m pip install https://github.com/anatolianroverchallenge/rscp/releases/latest/download/rscp_protobuf.zip
 
-# make sure you have pip installed
-python3 -m pip install --upgrade pip
-
-# install required packages for building
-python3 -m pip install --upgrade build pytest
-
-# install the package in editable mode
-pip install -e .
-
-# or, build the package
-python3 -m build
-
-# or, test locally
-python3 -m pytest
-
-# or, test locally with cli logs
-python3 -m pytest --log-cli-level info # or debug, warning, error ...
-
-# or run linting
-python3 -m pylint rscp
+# To test the installation
+python3 -c "import rscp_protobuf"
 ```
 
 ## Examples
-[Here](examples/aruco_detection_example.py) is an example code to detect the Aruco markers which will be placed in the competition area.
+[aruco_detection_example.py](examples/aruco_detection_example.py) is an example code to detect the Aruco markers which will be placed in the competition area.
 
-**This section will receive more updates soon.**
+Check out the [examples/python](examples/python) directory for more examples of the protocol using Python.
 
 # License
 This project is licensed under the terms of the [BSD 3-Clause License](LICENSE).

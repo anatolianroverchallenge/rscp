@@ -12,3 +12,4 @@ __pycache__
 .vscode-ctags
 .pytest_cache
 .vscode/
+release/
