@@ -46,6 +46,8 @@ You may use `rscp_protobuf.zip` under the [releases](https://github.com/anatolia
 
 The `nanopb` library is used to generate the C/C++ source and header files that can be used in embedded systems. Refer to the [official documentation](https://jpa.kapsi.fi/nanopb/) and [nanopb examples](https://github.com/nanopb/nanopb/tree/master/examples) for more information.
 
+You may find the latest Protobuf documentation of the protocol [here](https://github.com/anatolianroverchallenge/rscp/releases/latest/download/index.html)
+
 ## Frame Format
 
 To communicate with the RSCP module, all you need to do is:
