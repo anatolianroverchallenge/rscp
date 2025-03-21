@@ -1,0 +1,107 @@
+name: Build, Version & Release Protobuf
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+env:
+  PROTO_DIR: ./proto
+  PROTO_PATH: ./proto/rscp.proto
+
+jobs:
+  build:
+    name: Build Libraries from Protobuf and Package Python Library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "28.0"
+      - name: Install protobuf-c compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-c-compiler
+      - name: Install pip dependencies
+        run: |
+          pip install --upgrade pip
+          pip install protobuf
+      - name: Generate C/C++/Python for desktop and nanopb for embedded
+        run: |
+          mkdir -p release/python release/cpp release/c release/nanopb release/docs
+          git clone https://github.com/nanopb/nanopb.git
+          cp nanopb/pb*.h release/nanopb/
+          cp nanopb/pb*.c release/nanopb/
+          protoc --plugin=protoc-gen-nanopb=nanopb/generator/protoc-gen-nanopb --nanopb_out=release/nanopb --python_out=release/python --cpp_out=release/cpp --c_out=release/c --proto_path=$PROTO_DIR $PROTO_PATH
+      - name: Generate docs
+        run: |
+          docker run --rm -v $(pwd)/release/docs:/out -v $(pwd)/$PROTO_DIR:/protos pseudomuto/protoc-gen-doc
+      - name: Archive generated libraries
+        run: |
+          cd release/
+          zip -rj python.zip python/*
+          zip -rj cpp.zip cpp/*
+          zip -rj c.zip c/*
+          zip -rj nanopb.zip nanopb/*
+          zip -rj docs.zip docs/*
+      - name: Package Python Library
+        run: |
+          mkdir -p release/rscp_protobuf/rscp_protobuf
+          cp -r release/python/* release/rscp_protobuf/rscp_protobuf/
+          mv release/rscp_protobuf/rscp_protobuf/rscp_pb2.py release/rscp_protobuf/rscp_protobuf/__init__.py
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+              VERSION=$(echo "${GITHUB_REF#refs/tags/}" | sed 's/^v//')
+          else
+              VERSION="0.0.0"
+          fi
+          cp ./scripts/release_setup.py release/rscp_protobuf/setup.py
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" release/rscp_protobuf/setup.py
+          # cd release/rscp_protobuf
+          # python -m pip install --upgrade pip setuptools wheel build
+          # python -m build
+          # cd ../..
+      - name: Archive Python Package
+        run: |
+          cd release
+          zip -r rscp_protobuf.zip rscp_protobuf
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ github.sha }}
+          path: |
+            release/*.zip
+            release/docs/index.html
+  release:
+    name: Create GitHub Release & Upload Assets
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Release Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ github.sha }}
+          path: release
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            release/python.zip
+            release/rscp_protobuf.zip
+            release/cpp.zip
+            release/c.zip
+            release/nanopb.zip
+            release/docs/index.html
