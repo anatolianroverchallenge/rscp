@@ -8,7 +8,7 @@ find_package(Protobuf REQUIRED)
 find_package(absl CONFIG REQUIRED)
 
 # Uncomment only if necessary (for Dynamic Linking Errors)
-#set(Protobuf_LIBRARIES "<vcpkg-path>/libprotobuf.lib")
+#set(Protobuf_LIBRARIES "<libprotobuf.lib-path>")
 
 include_directories(
     ${Protobuf_INCLUDE_DIR}
