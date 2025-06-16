@@ -75,14 +75,20 @@ message SetStage {
 }
 
 /**
+ * Start exploration.
+ */
+message StartExploration {}
+
+/**
  * Envelope for all request messages.
  */
 message RequestEnvelope {
   oneof request {
-    ArmDisarm arm_disarm = 1;          // Arm or disarm the rover.
-    SetStage set_stage = 2;            // Set the mission stage.
-    NavigateToGPS navigate_to_gps = 3; // Navigate to GPS coordinates.
-    SearchArea search_area = 4;        // Search an area.
+    ArmDisarm arm_disarm = 1;               // Arm or disarm the rover.
+    SetStage set_stage = 2;                 // Set the mission stage.
+    NavigateToGPS navigate_to_gps = 3;      // Navigate to GPS coordinates.
+    SearchArea search_area = 4;             // Search an area.
+    StartExploration start_exploration = 5; // Start exploration.
   }
 }
 
