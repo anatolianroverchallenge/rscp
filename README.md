@@ -20,6 +20,10 @@ The latest release can be found on the [GitHub releases page](https://github.com
 - [Details](#details)
   - [Frame Format](#frame-format)
   - [Communication Sequence](#communication-sequence)
+    - [Stage 1 Antenna Installation](#stage-1-antenna-installation)
+    - [Stage 2 Icy Crater](#stage-2-icy-crater)
+    - [Stage 3 Lava Tube](#stage-3-lava-tube)
+    - [Stage 4 Return to Airlock](#stage-4-return-to-airlock)
 - [Getting Started](#getting-started)
   - [Installation of python package](#installation-of-python-package)
   - [Examples](#examples)
@@ -69,7 +73,104 @@ To receive an instruction from the RSCP module, you need to:
 
 RSCP client module will be sending host messages to the rovers in `rscp.RequestEnvelope` format. The rovers will be sending responses to the host in `rscp.ResponseEnvelope` format.
 
-** This is a work in progress. More details will be added soon. **
+### Stage 1 Antenna Installation
+
+| Message Type               | Direction        | Description                                         | light           |
+| -------------------------- | ---------------- | --------------------------------------------------- | --------------- |
+| SetStage(1)                | HM -> CM         | --                                                  | :heart:         |
+| SetStage(1)                | **CM -> Rover**  | Rover sets the stage to 1                           | :heart:         |
+| Acknowledge                | **Rover -> CM**  | Rover acknowledges the stage setting                | :heart:         |
+| Acknowledge                | CM -> HM         | --                                                  | :heart:         |
+| ArmDisarm(arm=True)        | HM -> CM         | --                                                  | :heart:         |
+| ArmDisarm(arm=True)        | **CM -> Rover**  | Rover arms itself                                   | :green_heart:   |
+| Acknowledge                | **Rover -> CM**  | Rover acknowledges the arming request               | :green_heart:   |
+| Acknowledge                | CM -> HM         | --                                                  | :green_heart:   |
+| SearchArea(lat1,lon1,rad1) | HM -> CM         | --                                                  | :green_heart:   |
+| SearchArea(lat1,lon1,rad1) | **CM -> Rover**  | Rover starts receives area coordinates              | :green_heart:   |
+| Acknowledge                | **Rover -> CM**  | Rover acknowledges and starts navigation and search | :yellow_heart:  |
+| Acknowledge                | CM -> HM         | --                                                  | :yellow_heart:  |
+| no message sent            | --               | finished navigating and searching                   | :yellow_heart:  |
+| no message sent            | --               | install antenna                                     | :yellow_heart:  |
+| GPSCoordinate(lat2,lon2)   | **Rover -> CM**  | Rover sends coordinates of the peak                 | :yellow_heart:  |
+| GPSCoordinate(lat2,lon2)   | CM -> HM         | --                                                  | :yellow_heart:  |
+| TaskCompleted              | **Rover -> CM**  | rover reports navigation finished                   | :green_heart:   |
+| TaskCompleted              | CM -> HM         | --                                                  | :green_heart:   |
+
+  
+  
+### Stage 2 Icy Crater
+
+| Message Type               | Direction        | Description                                         | light           |
+| -------------------------- | ---------------- | --------------------------------------------------- | --------------- |
+| SetStage(2)                | HM -> CM         | --                                                  | :green_heart:   |
+| SetStage(2)                | **CM -> Rover**  | Rover sets the stage to 2                           | :green_heart:   |
+| Acknowledge                | **Rover -> CM**  | Rover acknowledges the stage setting                | :green_heart:   |
+| Acknowledge                | CM -> HM         | --                                                  | :green_heart:   |
+| SearchArea(lat3,lon3,rad3) | HM -> CM         | --                                                  | :green_heart:   |
+| SearchArea(lat3,lon3,rad3) | **CM -> Rover**  | Rover starts receives area coordinates              | :green_heart:   |
+| Acknowledge                | **Rover -> CM**  | Rover acknowledges and starts navigation and search | :yellow_heart:  |
+| Acknowledge                | CM -> HM         | --                                                  | :yellow_heart:  |
+| no message sent            | --               | finished navigating and searching                   | :yellow_heart:  |
+| GPSCoordinate(lat4,lon4)   | **Rover -> CM**  | Rover sends coordinates of the coldest surface      | :yellow_heart:  |
+| GPSCoordinate(lat4,lon4)   | CM -> HM         | --                                                  | :yellow_heart:  |
+| TaskCompleted              | **Rover -> CM**  | rover reports navigation finished                   | :green_heart:   |
+| TaskCompleted              | CM -> HM         | --                                                  | :green_heart:   |
+
+  
+### Stage 3 Lava Tube
+
+| Message Type             | Direction       | Description                                           | light          |
+| ------------------------ | --------------- | ----------------------------------------------------- | -------------- |
+| SetStage(3)              | HM -> CM        | --                                                    | :green_heart:  |
+| SetStage(3)              | **CM -> Rover** | Rover sets the stage to 3                             | :green_heart:  |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges the stage setting                  | :green_heart:  |
+| Acknowledge              | CM -> HM        | --                                                    | :green_heart:  |
+| NavigateToGPS(lat5,lon5) | HM -> CM        | --                                                    | :green_heart:  |
+| NavigateToGPS(lat5,lon5) | **CM -> Rover** | Rover starts receives lava tube enterance coordinates | :green_heart:  |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation              | :green_heart:  |
+| Acknowledge              | CM -> HM        | --                                                    | :yellow_heart: |
+| no message sent          | --              | finished navigating                                   | :yellow_heart: |
+| TaskCompleted            | **Rover -> CM** | rover reports navigation finished                     | :green_heart:  |
+| TaskCompleted            | CM -> HM        |                     | :green_heart:  |
+| no message sent          | --              | Rover locates tag i (lava tube enterance)             | :green_heart:  |
+| StartExploration            | HM -> CM        | --                                                    | :green_heart:  |
+| StartExploration           | **CM -> Rover** | Rover starts to exploring                             | :green_heart:  |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges the message receiving              | :green_heart:  |
+| Acknowledge              | CM -> HM        | --                                                    | :yellow_heart: |
+| no message sent          | --              | continue exploring                                    | :yellow_heart: |
+| no message sent          | --              | Rover measures the length of covered section          | :yellow_heart: |
+| distance                 | **Rover -> CM** | Rover sends the measured distance                     | :yellow_heart: |
+| distance                 | CM -> HM        | --                                                    | :yellow_heart: |
+| no message sent          | --              | continue exploring                                    | :yellow_heart: |
+| no message sent          | --              | Rover locates tag j (lava tube exit) and exits        | :yellow_heart: |
+| TaskCompleted            | **Rover -> CM** | rover reports mission completed                       | :green_heart:  |
+| TaskCompleted            | CM -> HM        | --                                                    | :green_heart:  |
+
+
+
+### Stage 4 Return to Airlock
+| Message Type             | Direction       | Description                                     | light          |
+| ------------------------ | --------------- | ----------------------------------------------- | -------------- |
+| SetStage(4)              | HM -> CM        | --                                              | :green_heart:  |
+| SetStage(4)              | **CM -> Rover** | Rover sets the stage to 3                       | :green_heart:  |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges the stage setting            | :green_heart:  |
+| Acknowledge              | CM -> HM        | --                                              | :green_heart:  |
+| NavigateToGPS(lat6,lon6) | HM -> CM        | --                                              | :green_heart:  |
+| NavigateToGPS(lat6,lon6) | **CM -> Rover** | Rover starts receives GPS coordinates           | :green_heart:  |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation        | :yellow_heart: |
+| Acknowledge              | CM -> HM        | --                                              | :yellow_heart: |
+| no message sent          | --              | finished navigating                             | :yellow_heart: |
+| TaskCompleted            | **Rover -> CM** | rover reports navigation finished               | :green_heart:  |
+| TaskCompleted            | CM -> HM        |              | :green_heart:  |
+| no message sent          | --              | Rover locates tag k (airlock enterance)         | :yellow_heart: |
+| no message sent          | --              | Rover docks to the airlock                      | :yellow_heart: |
+| ArmDisarm(arm=False)     | HM -> CM        | --                                              | :green_heart:  |
+| ArmDisarm(arm=False)     | **CM -> Rover** | Rover disarms itself, light turns yellow to red | :heart:        |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges the arming request           | :heart:        |
+| Acknowledge              | CM -> HM        | mission completed.                              | :heart:        |
+
+
+
 
 # Getting Started
 
@@ -83,15 +184,18 @@ python3 -c "import rscp_protobuf"
 ```
 
 ## Examples
-[aruco_detection_example.py](examples/aruco_detection_example.py) is an example code to detect the Aruco markers which will be placed in the competition area.
+- [aruco_detection_example.py](examples/aruco_detection_example.py) is an example code to detect the Aruco markers which will be placed in the competition area.
 
-Check out the [examples/python](examples/python) directory for more examples of the protocol using Python.
+- Check out the [examples/python](examples/python) directory for more examples of the protocol using Python.
+
+
 
 # License
 This project is licensed under the terms of the [BSD 3-Clause License](LICENSE).
 
 # Authors
 * **Sencer Yazici** - [Sencer Yazici](mailto:senceryazici@gmail.com)
+* **Yavuz Hanege** - [Yavuz Hanege](mailto:hanegeyavuz@gmail.com)
 
 # Acknowledgements
 This project is developed for [Anatolian Rover Challenge (ARC)](https://www.anatolianrover.space/)
