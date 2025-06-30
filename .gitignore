@@ -13,3 +13,7 @@ __pycache__
 .pytest_cache
 .vscode/
 release/
+/build/
+/*.exe
+/*.obj
+/*.log
