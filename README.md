@@ -1,7 +1,7 @@
 # Rover Satellite Communications Protocol
 Rover Satellite Communications Protocol is a protocol for communicating with a rover over a serial connection. This project is designed for [Anatolian Rover Challenge (ARC)](www.anatolianrover.space/).
 
-<h2>If you are a competitor in <strong>ARC'24</strong>, please watch this repository to get notified about the updates.</h2>
+<h2>If you are a competitor in <strong>ARC'25</strong>, please watch this repository to get notified about the updates.</h2>
 
 **Also check out [Discussions](https://github.com/anatolianroverchallenge/rscp/discussions) for updates and questions.**
 
@@ -127,15 +127,15 @@ RSCP client module will be sending host messages to the rovers in `rscp.RequestE
 | Acknowledge              | CM -> HM        | --                                                    | :green_heart:  |
 | NavigateToGPS(lat5,lon5) | HM -> CM        | --                                                    | :green_heart:  |
 | NavigateToGPS(lat5,lon5) | **CM -> Rover** | Rover starts receives lava tube enterance coordinates | :green_heart:  |
-| Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation              | :green_heart:  |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges and starts navigation              | :yellow_heart:  |
 | Acknowledge              | CM -> HM        | --                                                    | :yellow_heart: |
 | no message sent          | --              | finished navigating                                   | :yellow_heart: |
 | TaskCompleted            | **Rover -> CM** | rover reports navigation finished                     | :green_heart:  |
-| TaskCompleted            | CM -> HM        | Navigation duration = t3(now) - t2                    | :green_heart:  |
+| TaskCompleted            | CM -> HM        |                     | :green_heart:  |
 | no message sent          | --              | Rover locates tag i (lava tube enterance)             | :green_heart:  |
-| message("go")            | HM -> CM        | --                                                    | :green_heart:  |
-| message("go")            | **CM -> Rover** | Rover starts to exploring                             | :green_heart:  |
-| Acknowledge              | **Rover -> CM** | Rover acknowledges the message receiving              | :green_heart:  |
+| StartExploration            | HM -> CM        | --                                                    | :green_heart:  |
+| StartExploration           | **CM -> Rover** | Rover starts to exploring                             | :green_heart:  |
+| Acknowledge              | **Rover -> CM** | Rover acknowledges the message receiving              | :yellow_heart:  |
 | Acknowledge              | CM -> HM        | --                                                    | :yellow_heart: |
 | no message sent          | --              | continue exploring                                    | :yellow_heart: |
 | no message sent          | --              | Rover measures the length of covered section          | :yellow_heart: |
@@ -161,10 +161,10 @@ RSCP client module will be sending host messages to the rovers in `rscp.RequestE
 | Acknowledge              | CM -> HM        | --                                              | :yellow_heart: |
 | no message sent          | --              | finished navigating                             | :yellow_heart: |
 | TaskCompleted            | **Rover -> CM** | rover reports navigation finished               | :green_heart:  |
-| TaskCompleted            | CM -> HM        | Navigation duration = t7(now) - t6              | :green_heart:  |
+| TaskCompleted            | CM -> HM        |              | :green_heart:  |
 | no message sent          | --              | Rover locates tag k (airlock enterance)         | :yellow_heart: |
 | no message sent          | --              | Rover docks to the airlock                      | :yellow_heart: |
-| ArmDisarm(arm=False)     | HM -> CM        | --                                              | :green_heart:  |
+| ArmDisarm(arm=False)     | HM -> CM        | --                                              | :yellow_heart:  |
 | ArmDisarm(arm=False)     | **CM -> Rover** | Rover disarms itself, light turns yellow to red | :heart:        |
 | Acknowledge              | **Rover -> CM** | Rover acknowledges the arming request           | :heart:        |
 | Acknowledge              | CM -> HM        | mission completed.                              | :heart:        |
@@ -186,7 +186,9 @@ python3 -c "import rscp_protobuf"
 ## Examples
 - [aruco_detection_example.py](examples/aruco_detection_example.py) is an example code to detect the Aruco markers which will be placed in the competition area.
 
-- Check out the [examples/python](examples/python) , [examples/nanopb](examples/nanopb) adn [examples/Cpp](examples/Cpp) directory for more examples of the protocol using Python and C++.
+- Check out the [examples/python](examples/python) directory for more examples of the protocol using Python.
+
+
 
 # License
 This project is licensed under the terms of the [BSD 3-Clause License](LICENSE).
