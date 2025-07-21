@@ -31,6 +31,7 @@ jobs:
         uses: arduino/setup-protoc@v3
         with:
           version: "28.0"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install protobuf-c compiler
         run: sudo apt-get update && sudo apt-get install -y protobuf-c-compiler
       - name: Install pip dependencies

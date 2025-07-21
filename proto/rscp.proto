@@ -49,7 +49,9 @@ enum RoverState {
  * Arm or disarm the rover.
  */
 message ArmDisarm {
-  optional bool value = 1; // True to arm, false to disarm.
+    oneof value_wrapper { // True to arm, false to disarm.
+    bool value = 1;
+  }
 }
 
 /**
