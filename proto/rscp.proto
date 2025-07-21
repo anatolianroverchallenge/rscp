@@ -49,7 +49,9 @@ enum RoverState {
  * Arm or disarm the rover.
  */
 message ArmDisarm {
-  bool value = 1; // True to arm, false to disarm.
+    oneof value_wrapper { // True to arm, false to disarm.
+    bool value = 1;
+  }
 }
 
 /**
@@ -77,7 +79,9 @@ message SetStage {
 /**
  * Start exploration.
  */
-message StartExploration {}
+message StartExploration {
+  bool dummy_field = 1;
+}
 
 /**
  * Envelope for all request messages.
