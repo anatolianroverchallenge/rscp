@@ -1,7 +1,7 @@
 # Rover Satellite Communications Protocol
 Rover Satellite Communications Protocol is a protocol for communicating with a rover over a serial connection. This project is designed for [Anatolian Rover Challenge (ARC)](www.anatolianrover.space/).
 
-<h2>If you are a competitor in <strong>ARC'25</strong>, please watch this repository to get notified about the updates.</h2>
+<h2>If you are a competitor in <strong>ARC'26</strong>, please watch this repository to get notified about the updates.</h2>
 
 **Also check out [Discussions](https://github.com/anatolianroverchallenge/rscp/discussions) for updates and questions.**
 
@@ -21,7 +21,7 @@ The latest release can be found on the [GitHub releases page](https://github.com
   - [Frame Format](#frame-format)
   - [Communication Sequence](#communication-sequence)
     - [Stage 1 Antenna Installation](#stage-1-antenna-installation)
-    - [Stage 2 Icy Crater](#stage-2-icy-crater)
+    - [Stage 2 Shackleton Crater](#stage-2-shackleton-crater)
     - [Stage 3 Lava Tube](#stage-3-lava-tube)
     - [Stage 4 Return to Airlock](#stage-4-return-to-airlock)
 - [Getting Started](#getting-started)
@@ -98,7 +98,7 @@ RSCP client module will be sending host messages to the rovers in `rscp.RequestE
 
   
   
-### Stage 2 Icy Crater
+### Stage 2 Shackleton Crater
 
 | Message Type               | Direction        | Description                                         | light           |
 | -------------------------- | ---------------- | --------------------------------------------------- | --------------- |
@@ -111,7 +111,7 @@ RSCP client module will be sending host messages to the rovers in `rscp.RequestE
 | Acknowledge                | **Rover -> CM**  | Rover acknowledges and starts navigation and search | :yellow_heart:  |
 | Acknowledge                | CM -> HM         | --                                                  | :yellow_heart:  |
 | no message sent            | --               | finished navigating and searching                   | :yellow_heart:  |
-| GPSCoordinate(lat4,lon4)   | **Rover -> CM**  | Rover sends coordinates of the coldest surface      | :yellow_heart:  |
+| GPSCoordinate(lat4,lon4)   | **Rover -> CM**  | Rover sends coordinates of the dark-colored Ilmenite-Rich basalt     | :yellow_heart:  |
 | GPSCoordinate(lat4,lon4)   | CM -> HM         | --                                                  | :yellow_heart:  |
 | TaskCompleted              | **Rover -> CM**  | rover reports navigation finished                   | :green_heart:   |
 | TaskCompleted              | CM -> HM         | --                                                  | :green_heart:   |
